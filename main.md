@@ -1,3 +1,24 @@
-Build a python program that displays a watchlist of movies along with additional information and ratings from popular rating websites like letterboxd, IMDb, Rotten Tomatoes and Metacritic. It will scan the webpage of a given letterboxd watchlist using Beautiful Soup and display information of the movie along with the rating. 
-It will use OMDb API to get the information and ratings. The information that needs to be displayed is: title, year, director, actors (the first 3 from OMDb), awards (if any).
+# Letterboxd Better Watchlist
 
+## Goal
+
+CLI tool that scrapes a Letterboxd watchlist and displays per-film details + ratings in the terminal.
+
+## Data Sources
+
+- **Letterboxd watchlist** — scraped via BeautifulSoup for film slugs/titles/years
+- **Letterboxd film page** — scraped via BeautifulSoup for Letterboxd rating
+- **OMDb API** — queried by title + year for director, actors, awards, and IMDb/Rotten Tomatoes/Metacritic ratings
+
+## Fields Displayed
+
+- Title, year, director
+- First 3 actors (from OMDb)
+- Awards (if any, else "None")
+- 4 ratings: Letterboxd, IMDb, Rotten Tomatoes, Metacritic
+
+## Constraints
+
+- No database
+- No tests (unless asked)
+- No other external APIs beyond OMDb

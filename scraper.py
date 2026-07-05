@@ -13,8 +13,9 @@ _USER_AGENTS = [
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15",
 ]
 
-
 DELAY = 0.8
+OMDB_DELAY = 0.5
+
 
 def _fetch(url, retries=2):
     for attempt in range(retries):
@@ -100,24 +101,31 @@ def get_watchlist_films(username):
     return films
 
 
-def get_film_details(slug):
+def get_letterboxd_rating(slug):
     url = f"https://letterboxd.com/film/{slug}/"
     soup = _fetch(url)
     if soup is None:
-        return {"rating": "N/A", "director": None}
-
-    result = {"rating": "N/A", "director": None}
+        return "N/A"
 
     ld = _jsonld(soup)
     if ld:
         ar = ld.get("aggregateRating") or {}
         if ar.get("ratingValue") is not None:
-            result["rating"] = str(ar["ratingValue"])
-        director = ld.get("director") or []
-        if isinstance(director, dict):
-            result["director"] = director.get("name")
-        elif isinstance(director, list) and director:
-            d = director[0]
-            result["director"] = d.get("name") if isinstance(d, dict) else str(d)
+            return str(ar["ratingValue"])
 
-    return result
+    return "N/A"
+
+
+def get_omdb_details(title, year, api_key):
+    time.sleep(OMDB_DELAY + random.random() * OMDB_DELAY)
+    params = {"t": title, "apikey": api_key, "plot": "short"}
+    if year:
+        params["y"] = year
+    try:
+        resp = requests.get("https://www.omdbapi.com/", params=params, timeout=15)
+        data = resp.json()
+        if data.get("Response") == "False":
+            return None
+        return data
+    except Exception:
+        return None

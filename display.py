@@ -3,18 +3,25 @@ from rich.panel import Panel
 
 console = Console()
 
+_RATINGS = [
+    ("Letterboxd", 5.0),
+    ("IMDb", 10.0),
+    ("Rotten Tomatoes", 100.0),
+    ("Metacritic", 100.0),
+]
 
-def _bar(value, max_val=5.0, width=24):
+
+def _bar(value, max_val, width=22):
     ratio = value / max_val if max_val else 0
     filled = int(ratio * width)
     return "\u2588" * filled + "\u2591" * (width - filled)
 
 
-def _color(val_str):
+def _color(val_str, max_val):
     if val_str == "N/A":
         return "dim"
     try:
-        ratio = float(val_str) / 5.0
+        ratio = float(val_str) / max_val
     except (ValueError, TypeError):
         return "dim"
     if ratio >= 0.8:
@@ -22,6 +29,16 @@ def _color(val_str):
     if ratio >= 0.6:
         return "yellow"
     return "red"
+
+
+def _fmt(val_str, max_val):
+    if val_str == "N/A":
+        return "N/A"
+    if max_val == 5.0:
+        return f"{val_str}/5"
+    if max_val == 10.0:
+        return f"{val_str}/10"
+    return f"{val_str}%"
 
 
 def display_movies(movies):
@@ -34,24 +51,36 @@ def display_movies(movies):
         lines.append(title)
 
         lines.append(f"Director: [italic]{movie.director or 'N/A'}[/italic]")
+        lines.append(
+            f"Actors: [italic]{', '.join(movie.actors) if movie.actors else 'N/A'}[/italic]"
+        )
+        awards = movie.awards or "None"
+        if awards in ("", "N/A"):
+            awards = "None"
+        lines.append(f"Awards: {awards}")
         lines.append("")
 
-        val = movie.letterboxd_rating
-        if val != "N/A":
-            v = float(val)
-            b = _bar(v, 5.0)
-            c = _color(val)
-            lines.append(
-                f"  [{c}]\u25cf[/] Letterboxd: [bold]{v}[/] [dim]{v}/5[/dim]  [{c}]{b}[/]"
-            )
-        else:
-            lines.append(f"  [dim]\u25cb Letterboxd: N/A[/dim]")
+        vals = [
+            movie.letterboxd_rating,
+            movie.imdb_rating,
+            movie.rotten_tomatoes_rating,
+            movie.metacritic_rating,
+        ]
+
+        for (name, max_val), val in zip(_RATINGS, vals):
+            if val != "N/A":
+                v = float(val)
+                b = _bar(v, max_val)
+                c = _color(val, max_val)
+                display_name = name if name != "Rotten Tomatoes" else "RT"
+                lines.append(
+                    f"  [{c}]\u25cf[/] {display_name}: [bold]{v}[/] [dim]{_fmt(val, max_val)}[/]  [{c}]{b}[/]"
+                )
+            else:
+                display_name = name if name != "Rotten Tomatoes" else "RT"
+                lines.append(f"  [dim]\u25cb {display_name}: N/A[/dim]")
 
         content = "\n".join(lines)
-        panel = Panel(
-            content,
-            border_style="blue",
-            padding=(0, 1),
-        )
+        panel = Panel(content, border_style="blue", padding=(0, 1))
         console.print(panel)
         console.print()
