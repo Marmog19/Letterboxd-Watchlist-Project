@@ -4,7 +4,6 @@ from rich.panel import Panel
 console = Console()
 
 _RATINGS = [
-    ("Letterboxd", 5.0),
     ("IMDb", 10.0),
     ("Rotten Tomatoes", 100.0),
     ("Metacritic", 100.0),
@@ -34,8 +33,6 @@ def _color(val_str, max_val):
 def _fmt(val_str, max_val):
     if val_str == "N/A":
         return "N/A"
-    if max_val == 5.0:
-        return f"{val_str}/5"
     if max_val == 10.0:
         return f"{val_str}/10"
     return f"{val_str}%"
@@ -58,10 +55,13 @@ def display_movies(movies):
         if awards in ("", "N/A"):
             awards = "None"
         lines.append(f"Awards: {awards}")
+
+        if movie.letterboxd_url:
+            lines.append(f"Letterboxd: [dim]{movie.letterboxd_url}[/dim]")
+
         lines.append("")
 
         vals = [
-            movie.letterboxd_rating,
             movie.imdb_rating,
             movie.rotten_tomatoes_rating,
             movie.metacritic_rating,

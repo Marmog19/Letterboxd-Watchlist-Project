@@ -3,7 +3,7 @@
 ## Run
 
 ```bash
-python3 main.py https://letterboxd.com/{username}/watchlist/
+python3 main.py watchlist.csv
 ```
 
 ## Dependencies
@@ -16,7 +16,7 @@ pip install -r requirements.txt
 
 Fallback (apt, if venv unavailable):
 ```bash
-sudo apt install python3-requests python3-bs4 python3-rich
+sudo apt install python3-requests python3-rich
 ```
 
 ## .env
@@ -25,21 +25,16 @@ sudo apt install python3-requests python3-bs4 python3-rich
 
 ## Architecture
 
-- `main.py` — entry point: loads .env, orchestrates Letterboxd scrape + OMDb API calls, builds `Movie` dataclass
-- `scraper.py` — Letterboxd HTML scraping + OMDb HTTP calls
+- `main.py` — entry point: loads .env, reads CSV, queries OMDb API, builds `Movie` dataclass
+- `scraper.py` — OMDb HTTP calls only
 - `display.py` — rich card output
 
-## Scraping Gotchas
+## CSV Format
 
-- **Letterboxd watchlist**: films are in `div.react-component[data-component-class="LazyPoster"]` with `data-item-slug`, `data-item-name="Title (Year)"`. Not the old `li.poster-container` structure.
-- **Letterboxd film page JSON-LD**: wrapped in `/* <![CDATA[ */` comment — extract substring between `{` and `}` before `json.loads`.
-- **IMDb.com**: blocks scrapers with AWS WAF (returns HTTP 202 + JS challenge). Use OMDb API instead for IMDb/RT/Metacritic ratings.
-- **Rate limits**: `DELAY=0.8` (Letterboxd fetches), `OMDB_DELAY=0.5` (OMDb calls) — random jitter added.
+Expected columns: `Name`, `Year`, `Letterboxd URI` (only `Name` required).
 
-## Entry Points
+## OMDb Rate Limit
 
-- App: `main.py` → `main()`
-- Scraper module: `get_watchlist_films()`, `get_letterboxd_rating()`, `get_omdb_details()`
-- Display module: `display_movies()`
+`OMDB_DELAY=0.5` (random jitter added). Free tier: 1,000 requests/day.
 
 ## No tests, no database

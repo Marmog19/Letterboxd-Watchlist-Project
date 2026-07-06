@@ -1,14 +1,10 @@
 import sys
 import os
+import csv
 import re
 from dataclasses import dataclass, field
-from urllib.parse import urlparse
 
-from scraper import (
-    get_watchlist_films,
-    get_letterboxd_rating,
-    get_omdb_details,
-)
+from scraper import get_omdb_details
 from display import display_movies, console
 
 
@@ -19,17 +15,24 @@ class Movie:
     director: str
     actors: list[str] = field(default_factory=list)
     awards: str = ""
-    letterboxd_rating: str = "N/A"
+    letterboxd_url: str = ""
     imdb_rating: str = "N/A"
     rotten_tomatoes_rating: str = "N/A"
     metacritic_rating: str = "N/A"
 
 
-def extract_username(url):
-    parts = urlparse(url).path.strip("/").split("/")
-    if not parts or parts[0] in ("watchlist", "list"):
-        return None
-    return parts[0]
+def _load_env(path=".env"):
+    if not os.path.exists(path):
+        return
+    with open(path) as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            m = re.match(r"([\w_]+)\s*=\s*(.*)", line)
+            if m:
+                key, val = m.group(1), m.group(2).strip().strip("\"'")
+                os.environ.setdefault(key, val)
 
 
 def _parse_omdb_ratings(data):
@@ -47,20 +50,6 @@ def _parse_omdb_ratings(data):
     return result
 
 
-def _load_env(path=".env"):
-    if not os.path.exists(path):
-        return
-    with open(path) as f:
-        for line in f:
-            line = line.strip()
-            if not line or line.startswith("#"):
-                continue
-            m = re.match(r"([\w_]+)\s*=\s*(.*)", line)
-            if m:
-                key, val = m.group(1), m.group(2).strip().strip("\"'")
-                os.environ.setdefault(key, val)
-
-
 def main():
     _load_env()
     api_key = os.getenv("OMDB_API_KEY")
@@ -73,44 +62,45 @@ def main():
         )
         sys.exit(1)
 
-    if len(sys.argv) > 1:
-        url = sys.argv[1]
-    else:
-        url = input("Letterboxd watchlist URL: ").strip()
-
-    if "letterboxd.com" not in url:
-        console.print("[red]Not a valid Letterboxd URL[/red]")
+    if len(sys.argv) < 2:
+        console.print("[red]Usage:[/red] python main.py <watchlist.csv>")
         sys.exit(1)
 
-    username = extract_username(url)
-    if not username:
-        console.print("[red]Could not extract username from URL[/red]")
+    csv_path = sys.argv[1]
+    if not os.path.exists(csv_path):
+        console.print(f"[red]File not found:[/red] {csv_path}")
         sys.exit(1)
 
-    console.print(f"[bold]Scraping watchlist for[/bold] [cyan]{username}[/cyan] ...")
+    rows = []
+    with open(csv_path, newline="") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            rows.append(row)
 
-    films = get_watchlist_films(username)
-    if not films:
-        console.print("[yellow]No films found in watchlist[/yellow]")
+    if not rows:
+        console.print("[yellow]CSV file is empty[/yellow]")
         sys.exit(0)
 
-    console.print(f"Found [bold]{len(films)}[/bold] film(s)\n")
+    console.print(f"Loaded [bold]{len(rows)}[/bold] film(s) from CSV\n")
 
     movies = []
-    for i, film in enumerate(films, 1):
-        console.print(
-            f"  [dim][{i}/{len(films)}][/dim] "
-            f"{film['title']} [dim]{'(' + film['year'] + ')' if film['year'] else ''}[/dim]"
-        )
+    for i, row in enumerate(rows, 1):
+        title = row.get("Name", "").strip()
+        year = row.get("Year", "").strip()
+        lbxd_url = row.get("Letterboxd URI", "").strip()
 
-        lbxd_rating = get_letterboxd_rating(film["slug"])
-        title_lookup = film["title"].rstrip(".,;:!?")
-        omdb = get_omdb_details(title_lookup, film["year"], api_key)
+        if not title:
+            console.print(f"  [dim][{i}/{len(rows)}][/dim] [yellow]Skipping row with no title[/yellow]")
+            continue
 
+        console.print(f"  [dim][{i}/{len(rows)}][/dim] {title} [dim]{'(' + year + ')' if year else ''}[/dim]")
+
+        omdb = get_omdb_details(title.rstrip(".,;:!?"), year, api_key)
         omdb_ratings = _parse_omdb_ratings(omdb) if omdb else {}
+
         movie = Movie(
-            title=(omdb.get("Title", film["title"]) if omdb else film["title"]),
-            year=(omdb.get("Year", film["year"]) if omdb else film["year"]),
+            title=(omdb.get("Title", title) if omdb else title),
+            year=(omdb.get("Year", year) if omdb else year),
             director=(omdb.get("Director", "N/A") if omdb else "N/A"),
             actors=(
                 [a.strip() for a in omdb.get("Actors", "").split(",") if a.strip()][:3]
@@ -118,7 +108,7 @@ def main():
                 else []
             ),
             awards=(omdb.get("Awards", "N/A") if omdb else "N/A"),
-            letterboxd_rating=lbxd_rating,
+            letterboxd_url=lbxd_url,
             imdb_rating=omdb_ratings.get("imdb", "N/A"),
             rotten_tomatoes_rating=omdb_ratings.get("rt", "N/A"),
             metacritic_rating=omdb_ratings.get("metacritic", "N/A"),
