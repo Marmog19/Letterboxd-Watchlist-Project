@@ -6,7 +6,7 @@ CLI tool that reads a CSV of a Letterboxd watchlist and displays per-film detail
 
 ## Data Sources
 
-- **CSV input** — provided by the user, contains film data from a Letterboxd watchlist export (no scraping)
+- **CSV input** — provided by the user, contains film data from a Letterboxd watchlist export
 - **OMDb API** — queried by title + year for director, actors, awards, and IMDb/Rotten Tomatoes/Metacritic ratings
 
 ## Fields Displayed
@@ -16,10 +16,3 @@ CLI tool that reads a CSV of a Letterboxd watchlist and displays per-film detail
 - Awards (if any, else "None")
 - Letterboxd URI (from the CSV)
 - 3 ratings: IMDb, Rotten Tomatoes, Metacritic
-
-## Constraints
-
-- No database
-- No tests (unless asked)
-- No scraping (fully ToS-compliant)
-- No other external APIs beyond OMDb
