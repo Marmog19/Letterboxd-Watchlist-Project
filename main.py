@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 
 from scraper import get_omdb_details
 from display import display_movies, console
+from tv import get_tv_listings
 
 
 @dataclass
@@ -19,6 +20,7 @@ class Movie:
     imdb_rating: str = "N/A"
     rotten_tomatoes_rating: str = "N/A"
     metacritic_rating: str = "N/A"
+    on_tv: str = ""
 
 
 def _load_env(path=".env"):
@@ -83,6 +85,9 @@ def main():
 
     console.print(f"Loaded [bold]{len(rows)}[/bold] film(s) from CSV\n")
 
+    console.print(f"Loading today's TV listings...")
+    tv_lookup = get_tv_listings()
+
     movies = []
     for i, row in enumerate(rows, 1):
         title = row.get("Name", "").strip()
@@ -112,6 +117,7 @@ def main():
             imdb_rating=omdb_ratings.get("imdb", "N/A"),
             rotten_tomatoes_rating=omdb_ratings.get("rt", "N/A"),
             metacritic_rating=omdb_ratings.get("metacritic", "N/A"),
+            on_tv=tv_lookup.get(title.lower(), ""),
         )
         movies.append(movie)
 

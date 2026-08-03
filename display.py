@@ -59,6 +59,9 @@ def display_movies(movies):
         if movie.letterboxd_url:
             lines.append(f"Letterboxd: [dim]{movie.letterboxd_url}[/dim]")
 
+        if movie.on_tv:
+            lines.append(f"📺 On TV today: [bold green]{movie.on_tv}[/bold green]")
+
         lines.append("")
 
         vals = [
