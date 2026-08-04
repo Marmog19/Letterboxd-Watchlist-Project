@@ -1,4 +1,13 @@
 from dataclasses import dataclass, field
+from datetime import datetime
+
+
+@dataclass
+class TVProgramme:
+    title: str
+    channel: str
+    start: datetime
+    stop: datetime
 
 
 @dataclass
@@ -12,7 +21,7 @@ class Movie:
     imdb_rating: str = "N/A"
     rotten_tomatoes_rating: str = "N/A"
     metacritic_rating: str = "N/A"
-    on_tv: str = ""
+    on_tv: list[TVProgramme] = field(default_factory=list)
 
 
 def parse_omdb_ratings(data):

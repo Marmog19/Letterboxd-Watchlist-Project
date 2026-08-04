@@ -60,7 +60,10 @@ def display_movies(movies):
             lines.append(f"Letterboxd: [dim]{movie.letterboxd_url}[/dim]")
 
         if movie.on_tv:
-            lines.append(f"📺 On TV today: [bold green]{movie.on_tv}[/bold green]")
+            lines.append("📺 On TV today:")
+            for prog in movie.on_tv:
+                times = f"{prog.start:%H:%M}–{prog.stop:%H:%M}"
+                lines.append(f"  [bold green]{prog.channel} — {times}[/bold green]")
 
         lines.append("")
 

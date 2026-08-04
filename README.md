@@ -14,7 +14,7 @@ python main.py watchlist.csv --refresh   # bypass cache and re-fetch from APIs
 - **CSV input** — provided by the user, a Letterboxd watchlist export (`Name`, `Year`, `Letterboxd URI`)
 - **OMDb API** — queried by title + year for director, actors, awards, and IMDb/Rotten Tomatoes/Metacritic ratings
 - **TMDB API** (optional) — looks up each film's Italian title so Italian-translated listings can be matched (requires `TMDB_READ_TOKEN` in `.env`)
-- **XMLTV feed (epgshare01)** — today's Film programmes on Italian free-to-air channels, shown as `HH:MM on Channel`
+- **XMLTV feed (epgshare01)** — today's Film programmes on Italian free-to-air channels, shown as channel + start–end time for each airing today
 
 ## Fields Displayed
 
@@ -23,7 +23,7 @@ python main.py watchlist.csv --refresh   # bypass cache and re-fetch from APIs
 - Awards (if any, else "None")
 - Letterboxd URI (from the CSV)
 - 3 ratings: IMDb, Rotten Tomatoes, Metacritic
-- 📺 On TV today (when a match is found)
+- 📺 On TV today (channel + start–end time, all airings, when matched)
 
 ## Project Structure
 

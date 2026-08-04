@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from src.cache import cached_session
+from src.models import TVProgramme
 
 XMLTV_URL = "https://epgshare01.online/epgshare01/epg_ripper_IT1.xml.gz"
 ROME_TZ = ZoneInfo("Europe/Rome")
@@ -13,13 +14,14 @@ TV_TTL = timedelta(hours=12)
 
 session = cached_session("tv")
 
+_TIME_FMT = "%Y%m%d%H%M%S %z"
 
-def _format_time(start):
+
+def _parse_time(stamp):
     try:
-        dt = datetime.strptime(start.strip(), "%Y%m%d%H%M%S %z")
+        return datetime.strptime(stamp.strip(), _TIME_FMT).astimezone(ROME_TZ)
     except ValueError:
-        return "?"
-    return dt.astimezone(ROME_TZ).strftime("%H:%M")
+        return None
 
 
 def fetch_xmltv(url=XMLTV_URL, timeout=30, refresh=False):
@@ -61,8 +63,20 @@ def get_tv_listings(url=XMLTV_URL, today=None, refresh=False):
         if not title:
             continue
 
+        start_dt = _parse_time(start)
+        stop_dt = _parse_time(prog.get("stop", ""))
+        if start_dt is None:
+            continue
+
         cid = prog.get("channel", "")
         channel = channels.get(cid, cid)
-        listings[title.lower()] = f"{_format_time(start)} on {channel}"
+        listings.setdefault(title.lower(), []).append(
+            TVProgramme(
+                title=title,
+                channel=channel,
+                start=start_dt,
+                stop=stop_dt,
+            )
+        )
 
     return listings

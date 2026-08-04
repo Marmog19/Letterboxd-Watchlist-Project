@@ -33,9 +33,9 @@ sudo apt install python3-requests python3-rich
 - `src/models.py` — `Movie` dataclass + `parse_omdb_ratings()`
 - `src/omdb.py` — OMDb API client
 - `src/display.py` — rich card output
-- `src/tv.py` — fetches Italian XMLTV feed (epgshare01), parses today's Film programmes → `{lowercase_title: "HH:MM on Channel"}`
+- `src/tv.py` — fetches Italian XMLTV feed (epgshare01), parses today's Film programmes → `{lowercase_title: [TVProgramme]}` (all airings per title)
 - `src/tmdb.py` — TMDB search for localized (Italian) title; uses `Authorization: Bearer <TMDB_READ_TOKEN>` header
-- `src/matcher.py` — title matching: exact case-insensitive first, then RapidFuzz `token_sort_ratio` (threshold ≥ 85) against English + Italian titles
+- `src/matcher.py` — title matching: exact case-insensitive first, then RapidFuzz `token_sort_ratio` (threshold ≥ 85) against English + Italian titles; returns matching `TVProgramme` list
 
 ## Cache
 
