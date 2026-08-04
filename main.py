@@ -7,6 +7,8 @@ from dataclasses import dataclass, field
 from scraper import get_omdb_details
 from display import display_movies, console
 from tv import get_tv_listings
+from tmdb import get_tmdb_titles
+from matcher import find_tv_match
 
 
 @dataclass
@@ -64,6 +66,15 @@ def main():
         )
         sys.exit(1)
 
+    tmdb_token = os.getenv("TMDB_READ_TOKEN")
+    if tmdb_token:
+        console.print("[dim]TMDB translation matching enabled[/dim]")
+    else:
+        console.print(
+            "[yellow]Warning:[/yellow] TMDB_READ_TOKEN not found; matching English titles only. "
+            "Add it to .env to match Italian-translated titles."
+        )
+
     if len(sys.argv) < 2:
         console.print("[red]Usage:[/red] python main.py <watchlist.csv>")
         sys.exit(1)
@@ -103,8 +114,17 @@ def main():
         omdb = get_omdb_details(title.rstrip(".,;:!?"), year, api_key)
         omdb_ratings = _parse_omdb_ratings(omdb) if omdb else {}
 
+        english_title = omdb.get("Title", title) if omdb else title
+        italian_title = ""
+        if tmdb_token:
+            titles = get_tmdb_titles(english_title, year, tmdb_token)
+            if titles:
+                italian_title = titles[1] or ""
+
+        on_tv = find_tv_match(english_title, italian_title, tv_lookup)
+
         movie = Movie(
-            title=(omdb.get("Title", title) if omdb else title),
+            title=english_title,
             year=(omdb.get("Year", year) if omdb else year),
             director=(omdb.get("Director", "N/A") if omdb else "N/A"),
             actors=(
@@ -117,7 +137,7 @@ def main():
             imdb_rating=omdb_ratings.get("imdb", "N/A"),
             rotten_tomatoes_rating=omdb_ratings.get("rt", "N/A"),
             metacritic_rating=omdb_ratings.get("metacritic", "N/A"),
-            on_tv=tv_lookup.get(title.lower(), ""),
+            on_tv=on_tv,
         )
         movies.append(movie)
 
