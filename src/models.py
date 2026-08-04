@@ -8,6 +8,9 @@ class TVProgramme:
     channel: str
     start: datetime
     stop: datetime
+    categories: list[str] = field(default_factory=list)
+    director: str = ""
+    has_episode: bool = False
 
 
 @dataclass

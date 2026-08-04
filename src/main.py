@@ -57,6 +57,35 @@ def _build_movie(row, api_key, tmdb_token, tv_lookup, refresh):
     )
 
 
+def _build_tv_movie(programme_list, api_key, tmdb_token, refresh):
+    italian_title = programme_list[0].title
+    english_title = italian_title
+
+    if tmdb_token:
+        titles = get_tmdb_titles(italian_title, None, tmdb_token, refresh=refresh)
+        if titles:
+            english_title = titles[0] or italian_title
+
+    omdb = get_omdb_details(english_title, "", api_key, refresh=refresh)
+    omdb_ratings = parse_omdb_ratings(omdb) if omdb else {}
+
+    return Movie(
+        title=omdb.get("Title", english_title) if omdb else english_title,
+        year=(omdb.get("Year", "") if omdb else ""),
+        director=(omdb.get("Director", "N/A") if omdb else "N/A"),
+        actors=(
+            [a.strip() for a in omdb.get("Actors", "").split(",") if a.strip()][:3]
+            if omdb
+            else []
+        ),
+        awards=(omdb.get("Awards", "N/A") if omdb else "N/A"),
+        imdb_rating=omdb_ratings.get("imdb", "N/A"),
+        rotten_tomatoes_rating=omdb_ratings.get("rt", "N/A"),
+        metacritic_rating=omdb_ratings.get("metacritic", "N/A"),
+        on_tv=programme_list,
+    )
+
+
 def main():
     load_env()
     api_key = os.getenv("OMDB_API_KEY")
@@ -79,12 +108,19 @@ def main():
         )
 
     csv_path, refresh = _parse_args(sys.argv[1:])
-    if not csv_path:
-        console.print("[red]Usage:[/red] python main.py <watchlist.csv> [--refresh]")
-        sys.exit(1)
 
     if refresh:
         console.print("[dim]Cache: refresh mode (bypassing cached responses)[/dim]")
+
+    if not csv_path:
+        console.print("Loading today's TV listings...")
+        tv_lookup = get_tv_listings(refresh=refresh, tmdb_token=tmdb_token)
+        movies = [_build_tv_movie(progs, api_key, tmdb_token, refresh)
+                  for progs in tv_lookup.values()]
+        movies.sort(key=lambda m: min(p.start for p in m.on_tv))
+        console.print(f"\n[bold]Today's films on TV ({len(movies)}):[/bold]\n")
+        display_movies(movies)
+        return
 
     if not os.path.exists(csv_path):
         console.print(f"[red]File not found:[/red] {csv_path}")
@@ -98,7 +134,7 @@ def main():
     console.print(f"Loaded [bold]{len(rows)}[/bold] film(s) from CSV\n")
 
     console.print("Loading today's TV listings...")
-    tv_lookup = get_tv_listings(refresh=refresh)
+    tv_lookup = get_tv_listings(refresh=refresh, tmdb_token=tmdb_token)
 
     movies = []
     for i, row in enumerate(rows, 1):

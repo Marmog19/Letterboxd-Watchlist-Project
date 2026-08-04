@@ -22,7 +22,7 @@ sudo apt install python3-requests python3-rich
 ## .env
 
 `OMDB_API_KEY` must be set in `.env` (already present). Gitignored.
-`TMDB_READ_TOKEN` (API Read Access Token) enables Italian-title translation matching. Optional — without it, matching falls back to English only.
+`TMDB_READ_TOKEN` (API Read Access Token) enables Italian-title translation matching and is needed for TV-only rich cards (Italian→English title resolution). Optional — without it, matching falls back to English only.
 
 ## Architecture
 
@@ -33,9 +33,14 @@ sudo apt install python3-requests python3-rich
 - `src/models.py` — `Movie` dataclass + `parse_omdb_ratings()`
 - `src/omdb.py` — OMDb API client
 - `src/display.py` — rich card output
-- `src/tv.py` — fetches Italian XMLTV feed (epgshare01), parses today's Film programmes → `{lowercase_title: [TVProgramme]}` (all airings per title)
+- `src/tv.py` — fetches Italian XMLTV feed (epgshare01), parses today's Film programmes → `{lowercase_title: [TVProgramme]}` (all airings per title). Restricts to channels listed in `channels.txt`. Film detection: category `film` or a film genre + runtime ≥ 75 min; skips series (episode-num, `Stag./Ep.` markers) and non-film categories; falls back to TMDB for unsure entries.
 - `src/tmdb.py` — TMDB search for localized (Italian) title; uses `Authorization: Bearer <TMDB_READ_TOKEN>` header
 - `src/matcher.py` — title matching: exact case-insensitive first, then RapidFuzz `token_sort_ratio` (threshold ≥ 85) against English + Italian titles; returns matching `TVProgramme` list
+
+## Run modes
+
+- `python main.py <watchlist.csv>` — reads CSV, queries OMDb per film, shows rich cards, and matches each film against today's TV schedule
+- `python main.py` — TV-only mode: shows rich cards (via OMDb/TMDB) for every film detected on today's schedule across the `channels.txt` channels, sorted by first airing time
 
 ## Cache
 
