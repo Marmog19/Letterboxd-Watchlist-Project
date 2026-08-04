@@ -6,8 +6,8 @@ from src.config import load_env
 from src.display import console, display_movies
 from src.matcher import find_tv_match
 from src.models import Movie, parse_omdb_ratings
-from src.omdb import get_omdb_details
-from src.tmdb import get_tmdb_titles
+from src.omdb import get_omdb_by_id, get_omdb_details
+from src.tmdb import get_tmdb_movie, get_tmdb_titles
 from src.tv import get_tv_listings
 
 
@@ -60,13 +60,21 @@ def _build_movie(row, api_key, tmdb_token, tv_lookup, refresh):
 def _build_tv_movie(programme_list, api_key, tmdb_token, refresh):
     italian_title = programme_list[0].title
     english_title = italian_title
+    omdb = None
 
     if tmdb_token:
-        titles = get_tmdb_titles(italian_title, None, tmdb_token, refresh=refresh)
-        if titles:
-            english_title = titles[0] or italian_title
+        movie = get_tmdb_movie(italian_title, tmdb_token, refresh=refresh)
+        if movie is None:
+            movie = get_tmdb_movie(italian_title, tmdb_token, refresh=refresh, min_score=0)
+        if movie:
+            _, localized, _, imdb_id = movie
+            if localized:
+                english_title = localized
+            if imdb_id:
+                omdb = get_omdb_by_id(imdb_id, api_key, refresh=refresh)
 
-    omdb = get_omdb_details(english_title, "", api_key, refresh=refresh)
+    if omdb is None:
+        omdb = get_omdb_details(english_title, "", api_key, refresh=refresh)
     omdb_ratings = parse_omdb_ratings(omdb) if omdb else {}
 
     return Movie(

@@ -35,9 +35,10 @@ def get_tmdb_titles(title, year, token, refresh=False):
         return None
 
 
-def get_tmdb_movie(title, token, refresh=False):
-    """Return the best title-matching TMDB movie as (original, localized, runtime_min)
-    or None. Used to confirm whether an unsure listing is really a film."""
+def get_tmdb_movie(title, token, refresh=False, min_score=85):
+    """Return the best title-matching TMDB movie as
+    (original, localized, runtime_min, imdb_id) or None. Used to confirm
+    whether an unsure listing is really a film and to resolve IMDb IDs."""
     headers = {"Authorization": f"Bearer {token}", "accept": "application/json"}
     params = {"query": title, "language": "it-IT", "include_adult": "false"}
     try:
@@ -55,10 +56,13 @@ def get_tmdb_movie(title, token, refresh=False):
             return None
 
         def score(r):
-            return fuzz.token_sort_ratio(title.lower(), (r.get("title") or "").lower())
+            return max(
+                fuzz.token_sort_ratio(title.lower(), (r.get("title") or "").lower()),
+                fuzz.token_sort_ratio(title.lower(), (r.get("original_title") or "").lower()),
+            )
 
         best = max(results, key=score)
-        if score(best) < 85:
+        if score(best) < min_score:
             return None
 
         detail = rate_limited_get(
@@ -74,6 +78,7 @@ def get_tmdb_movie(title, token, refresh=False):
             (best.get("original_title") or "").strip(),
             (best.get("title") or "").strip(),
             detail.get("runtime") or 0,
+            (detail.get("imdb_id") or "").strip() or None,
         )
     except Exception:
         return None
