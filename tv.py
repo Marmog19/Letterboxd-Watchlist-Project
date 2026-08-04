@@ -2,20 +2,21 @@ import gzip
 import io
 import re
 import xml.etree.ElementTree as ET
-from datetime import datetime, timezone
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import requests
 
 XMLTV_URL = "https://epgshare01.online/epgshare01/epg_ripper_IT1.xml.gz"
+ROME_TZ = ZoneInfo("Europe/Rome")
 
 
 def _format_time(start):
-    date_part = start[:14]
     try:
-        dt = datetime.strptime(date_part, "%Y%m%d%H%M%S")
+        dt = datetime.strptime(start.strip(), "%Y%m%d%H%M%S %z")
     except ValueError:
         return "?"
-    return dt.strftime("%H:%M")
+    return dt.astimezone(ROME_TZ).strftime("%H:%M")
 
 
 def fetch_xmltv(url=XMLTV_URL, timeout=30):
@@ -26,7 +27,7 @@ def fetch_xmltv(url=XMLTV_URL, timeout=30):
 
 
 def get_tv_listings(url=XMLTV_URL, today=None):
-    today = today or datetime.now(timezone.utc).strftime("%Y%m%d")
+    today = today or datetime.now(ROME_TZ).strftime("%Y%m%d")
     xml_bytes = fetch_xmltv(url)
     root = ET.fromstring(xml_bytes)
 
