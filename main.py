@@ -39,6 +39,12 @@ def _load_env(path=".env"):
                 os.environ.setdefault(key, val)
 
 
+def _parse_args(argv):
+    refresh = "--refresh" in argv
+    positional = [a for a in argv if a != "--refresh"]
+    return positional[0] if positional else None, refresh
+
+
 def _parse_omdb_ratings(data):
     ratings = data.get("Ratings", [])
     result = {"imdb": "N/A", "rt": "N/A", "metacritic": "N/A"}
@@ -75,11 +81,14 @@ def main():
             "Add it to .env to match Italian-translated titles."
         )
 
-    if len(sys.argv) < 2:
-        console.print("[red]Usage:[/red] python main.py <watchlist.csv>")
+    csv_path, refresh = _parse_args(sys.argv[1:])
+    if not csv_path:
+        console.print("[red]Usage:[/red] python main.py <watchlist.csv> [--refresh]")
         sys.exit(1)
 
-    csv_path = sys.argv[1]
+    if refresh:
+        console.print("[dim]Cache: refresh mode (bypassing cached responses)[/dim]")
+
     if not os.path.exists(csv_path):
         console.print(f"[red]File not found:[/red] {csv_path}")
         sys.exit(1)
@@ -97,7 +106,7 @@ def main():
     console.print(f"Loaded [bold]{len(rows)}[/bold] film(s) from CSV\n")
 
     console.print(f"Loading today's TV listings...")
-    tv_lookup = get_tv_listings()
+    tv_lookup = get_tv_listings(refresh=refresh)
 
     movies = []
     for i, row in enumerate(rows, 1):
@@ -111,13 +120,13 @@ def main():
 
         console.print(f"  [dim][{i}/{len(rows)}][/dim] {title} [dim]{'(' + year + ')' if year else ''}[/dim]")
 
-        omdb = get_omdb_details(title.rstrip(".,;:!?"), year, api_key)
+        omdb = get_omdb_details(title.rstrip(".,;:!?"), year, api_key, refresh=refresh)
         omdb_ratings = _parse_omdb_ratings(omdb) if omdb else {}
 
         english_title = omdb.get("Title", title) if omdb else title
         italian_title = ""
         if tmdb_token:
-            titles = get_tmdb_titles(english_title, year, tmdb_token)
+            titles = get_tmdb_titles(english_title, year, tmdb_token, refresh=refresh)
             if titles:
                 italian_title = titles[1] or ""
 

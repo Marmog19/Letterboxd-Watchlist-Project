@@ -33,6 +33,13 @@ sudo apt install python3-requests python3-rich
 - `tmdb.py` — TMDB search for localized (Italian) title; uses `Authorization: Bearer <TMDB_READ_TOKEN>` header
 - `matcher.py` — title matching: exact case-insensitive first, then RapidFuzz `token_sort_ratio` (threshold ≥ 85) against English + Italian titles
 
+## Cache
+
+- `requests-cache` with one sqlite backend per API in `.cache/` (gitignored): `omdb.sqlite`, `tmdb.sqlite`, `tv.sqlite`.
+- OMDb/TMDB responses cached indefinitely (`expire_after=-1`); XMLTV feed refreshes every 12h.
+- Rate-limit sleeps only apply on real network calls (`not response.from_cache`).
+- `python main.py watchlist.csv --refresh` bypasses cached responses and rewrites them. Delete `.cache/` to clear everything.
+
 ## Matching behavior
 
 - Exact match (case-insensitive) on either English or Italian title wins first.

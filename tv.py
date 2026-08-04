@@ -1,14 +1,33 @@
 import gzip
 import io
+import os
 import re
 import xml.etree.ElementTree as ET
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
-import requests
+from requests_cache import CachedSession
+
+CACHE_DIR = ".cache"
+os.makedirs(CACHE_DIR, exist_ok=True)
 
 XMLTV_URL = "https://epgshare01.online/epgshare01/epg_ripper_IT1.xml.gz"
 ROME_TZ = ZoneInfo("Europe/Rome")
+TV_TTL = timedelta(hours=12)
+
+session = CachedSession(
+    os.path.join(CACHE_DIR, "tv"),
+    backend="sqlite",
+    expire_after=-1,
+)
+
+
+def _strip_vary(resp, **kwargs):
+    resp.headers.pop("Vary", None)
+    return resp
+
+
+session.hooks["response"].append(_strip_vary)
 
 
 def _format_time(start):
@@ -19,16 +38,17 @@ def _format_time(start):
     return dt.astimezone(ROME_TZ).strftime("%H:%M")
 
 
-def fetch_xmltv(url=XMLTV_URL, timeout=30):
-    resp = requests.get(url, timeout=timeout)
-    resp.raise_for_status()
+def fetch_xmltv(url=XMLTV_URL, timeout=30, refresh=False):
+    resp = session.get(
+        url, timeout=timeout, expire_after=TV_TTL, force_refresh=refresh
+    )
     with gzip.GzipFile(fileobj=io.BytesIO(resp.content)) as f:
         return f.read()
 
 
-def get_tv_listings(url=XMLTV_URL, today=None):
+def get_tv_listings(url=XMLTV_URL, today=None, refresh=False):
     today = today or datetime.now(ROME_TZ).strftime("%Y%m%d")
-    xml_bytes = fetch_xmltv(url)
+    xml_bytes = fetch_xmltv(url, refresh=refresh)
     root = ET.fromstring(xml_bytes)
 
     channels = {}
