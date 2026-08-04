@@ -1,28 +1,9 @@
-import os
-import random
-import time
-
-from requests_cache import CachedSession
-
-CACHE_DIR = ".cache"
-os.makedirs(CACHE_DIR, exist_ok=True)
+from src.cache import cached_session, rate_limited_get
 
 TMDB_BASE = "https://api.themoviedb.org/3"
 TMDB_DELAY = 0.4
 
-session = CachedSession(
-    os.path.join(CACHE_DIR, "tmdb"),
-    backend="sqlite",
-    expire_after=-1,
-)
-
-
-def _strip_vary(resp, **kwargs):
-    resp.headers.pop("Vary", None)
-    return resp
-
-
-session.hooks["response"].append(_strip_vary)
+session = cached_session("tmdb")
 
 
 def get_tmdb_titles(title, year, token, refresh=False):
@@ -31,15 +12,15 @@ def get_tmdb_titles(title, year, token, refresh=False):
     if year:
         params["year"] = year
     try:
-        resp = session.get(
+        resp = rate_limited_get(
+            session,
+            TMDB_DELAY,
             f"{TMDB_BASE}/search/movie",
             params=params,
             headers=headers,
             timeout=15,
             force_refresh=refresh,
         )
-        if not resp.from_cache:
-            time.sleep(TMDB_DELAY + random.random() * TMDB_DELAY)
         data = resp.json()
         results = data.get("results") or []
         if not results:

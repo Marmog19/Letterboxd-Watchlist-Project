@@ -26,12 +26,16 @@ sudo apt install python3-requests python3-rich
 
 ## Architecture
 
-- `main.py` — entry point: loads .env, reads CSV, queries OMDb API, builds `Movie` dataclass
-- `scraper.py` — OMDb HTTP calls only
-- `display.py` — rich card output
-- `tv.py` — fetches Italian XMLTV feed (epgshare01), parses today's Film programmes → `{lowercase_title: "HH:MM on Channel"}`
-- `tmdb.py` — TMDB search for localized (Italian) title; uses `Authorization: Bearer <TMDB_READ_TOKEN>` header
-- `matcher.py` — title matching: exact case-insensitive first, then RapidFuzz `token_sort_ratio` (threshold ≥ 85) against English + Italian titles
+- `main.py` — thin launcher: `from src.main import main`
+- `src/main.py` — orchestration: env, args, CSV read, movie building, display
+- `src/config.py` — project root path, `.env` loading, cache dir
+- `src/cache.py` — `cached_session()` factory + `rate_limited_get()` helper (dedup shared by clients)
+- `src/models.py` — `Movie` dataclass + `parse_omdb_ratings()`
+- `src/omdb.py` — OMDb API client
+- `src/display.py` — rich card output
+- `src/tv.py` — fetches Italian XMLTV feed (epgshare01), parses today's Film programmes → `{lowercase_title: "HH:MM on Channel"}`
+- `src/tmdb.py` — TMDB search for localized (Italian) title; uses `Authorization: Bearer <TMDB_READ_TOKEN>` header
+- `src/matcher.py` — title matching: exact case-insensitive first, then RapidFuzz `token_sort_ratio` (threshold ≥ 85) against English + Italian titles
 
 ## Cache
 
