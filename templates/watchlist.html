@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% import "_card.html" as card %}
+{% block title %}Watchlist — Letterboxd TV{% endblock %}
+{% block content %}
+  <h1>Watchlist</h1>
+  <form method="post" enctype="multipart/form-data" class="picker">
+    {% if csvs %}
+      <label for="csv_pick">Pick a CSV from the project folder:</label>
+      <select name="csv_pick" id="csv_pick">
+        {% for c in csvs %}
+          <option value="{{ c.name }}">{{ c.name }} ({{ c.stat().st_size }} bytes)</option>
+        {% endfor %}
+      </select>
+    {% endif %}
+    <label for="csv_file">or upload your own:</label>
+    <input type="file" name="csv_file" id="csv_file" accept=".csv">
+    <label><input type="checkbox" name="refresh" value="1"> Bypass cache</label>
+    <button type="submit">Load</button>
+  </form>
+  {% if error %}
+    <p class="error">Error: {{ error }}</p>
+  {% endif %}
+  {% if selected %}
+    <p class="toolbar">Showing: <strong>{{ selected }}</strong> ({{ movies|length }} films)</p>
+  {% endif %}
+  <div class="cards">
+    {% for movie in movies or [] %}
+      {{ card.movie_card(movie) }}
+    {% endfor %}
+  </div>
+  {% if movies is not none and not movies %}
+    <p class="empty">No films found in that watchlist.</p>
+  {% endif %}
+{% endblock %}

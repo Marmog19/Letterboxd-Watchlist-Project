@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% import "_card.html" as card %}
+{% block title %}Today's TV — Letterboxd TV{% endblock %}
+{% block content %}
+  <h1>Today's films on TV</h1>
+  <p class="toolbar">
+    {% if movies %}
+      {{ movies|length }} films
+      <a class="btn" href="{{ url_for('tv', refresh=1) }}">⟳ Refresh (bypass cache)</a>
+    {% else %}
+      <a class="btn" href="{{ url_for('tv') }}">⟳ Reload</a>
+    {% endif %}
+  </p>
+  {% if error %}
+    <p class="error">Error: {{ error }}</p>
+  {% endif %}
+  <div class="cards">
+    {% for movie in movies %}
+      {{ card.movie_card(movie) }}
+    {% endfor %}
+  </div>
+  {% if not movies and not error %}
+    <p class="empty">No films found today.</p>
+  {% endif %}
+{% endblock %}

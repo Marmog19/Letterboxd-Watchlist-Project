@@ -1,0 +1,47 @@
+{% macro rating_bar(movie) %}
+  {% set items = [
+    ("IMDb", movie.imdb_rating, 10.0),
+    ("RT", movie.rotten_tomatoes_rating, 100.0),
+    ("Metacritic", movie.metacritic_rating, 100.0),
+  ] %}
+  <div class="ratings">
+    {% for name, val, max_val in items %}
+      <div class="rating">
+        {% if val == "N/A" %}
+          <span class="rating-label dim">○ {{ name }}: N/A</span>
+        {% else %}
+          {% set ratio = val|float / max_val %}
+          {% if ratio >= 0.8 %}{% set color = "green" %}
+          {% elif ratio >= 0.6 %}{% set color = "yellow" %}
+          {% else %}{% set color = "red" %}{% endif %}
+          {% set width = (ratio * 20)|round|int %}
+          <span class="rating-label {{ color }}">● {{ name }}: {{ val }}<span class="dim">
+            {%- if max_val == 10.0 %}/10{% else %}%{% endif -%}
+          </span></span>
+          <span class="bar"><span class="bar-fill {{ color }}" style="width:{{ width * 4 }}px"></span></span>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+{% endmacro %}
+
+{% macro movie_card(movie) %}
+  <article class="card">
+    <h2>{{ movie.title }}{% if movie.year %} <span class="year">({{ movie.year }})</span>{% endif %}</h2>
+    <p class="meta">Director: <em>{{ movie.director or "N/A" }}</em></p>
+    <p class="meta">Actors: <em>{{ movie.actors|join(", ") if movie.actors else "N/A" }}</em></p>
+    <p class="meta">Awards: {{ movie.awards if movie.awards not in ("", "N/A") else "None" }}</p>
+    {% if movie.letterboxd_url %}
+      <p class="meta"><a href="{{ movie.letterboxd_url }}" target="_blank" rel="noopener">{{ movie.letterboxd_url }}</a></p>
+    {% endif %}
+    {% if movie.on_tv %}
+      <div class="on-tv">
+        <strong>📺 On TV today:</strong>
+        {% for prog in movie.on_tv %}
+          <span class="airing">{{ prog.channel }} — {{ prog.start.strftime("%H:%M") }}–{{ prog.stop.strftime("%H:%M") }}</span>
+        {% endfor %}
+      </div>
+    {% endif %}
+    {{ rating_bar(movie) }}
+  </article>
+{% endmacro %}

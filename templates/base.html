@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Letterboxd TV{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header>
+    <nav>
+      <span class="brand">📺 Letterboxd TV</span>
+      <a href="{{ url_for('tv') }}" class="{{ 'active' if request.endpoint == 'tv' }}">Today's TV</a>
+      <a href="{{ url_for('watchlist') }}" class="{{ 'active' if request.endpoint == 'watchlist' }}">Watchlist</a>
+    </nav>
+  </header>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

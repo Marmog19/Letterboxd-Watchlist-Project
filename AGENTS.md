@@ -4,7 +4,10 @@
 
 ```bash
 python3 main.py watchlist.csv
+python3 web.py          # local web app at http://127.0.0.1:5000
 ```
+
+The web app has two pages: `/` (today's TV schedule) and `/watchlist` (pick or upload a CSV). Both reuse the same builders as the CLI via `src/service.py`.
 
 ## Dependencies
 
