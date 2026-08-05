@@ -5,6 +5,18 @@ from rapidfuzz import fuzz
 
 MATCH_THRESHOLD = 85.0
 
+_ROMAN = {"i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix", "x",
+          "xi", "xii"}
+_SEQUEL_TOKENS = {"part", "vol", "volume", "episodio", "episode", "capitolo"}
+
+
+def _is_sequel_extra(tokens):
+    """True when extra tokens between two titles are all sequel markers
+    (digits, Roman numerals, part/volume words). E.g. 'storia infinita'
+    vs 'storia infinita 2' -> {'2'}; but 'never ending story' vs
+    'the never ending story' -> {'the'} -> False."""
+    return all(t.isdigit() or t in _ROMAN or t in _SEQUEL_TOKENS for t in tokens)
+
 
 def normalize(title):
     if not title:
@@ -40,8 +52,12 @@ def find_tv_match(english_title, italian_title, listings):
     for cand in candidates:
         if not cand:
             continue
+        cand_tokens = set(cand.split())
         for norm_key, raw_key in normalized_listings.items():
             if not norm_key:
+                continue
+            extra = cand_tokens.symmetric_difference(norm_key.split())
+            if extra and _is_sequel_extra(extra):
                 continue
             score = fuzz.token_sort_ratio(cand, norm_key)
             if score > best_score:
