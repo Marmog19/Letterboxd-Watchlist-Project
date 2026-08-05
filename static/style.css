@@ -151,7 +151,11 @@ h1 { font-size: 1.5rem; margin: 0 0 1rem; }
 
 .rating { display: flex; align-items: center; gap: 0.6rem; font-size: 0.9rem; }
 
-.rating-label { color: var(--text); }
+.rating-label {
+  color: var(--text);
+  width: 150px;
+  flex-shrink: 0;
+}
 
 .rating-label.green { color: var(--green); }
 .rating-label.yellow { color: var(--yellow); }

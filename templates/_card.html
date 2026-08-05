@@ -17,7 +17,7 @@
           {% set width = (ratio * 20)|round|int %}
           <span class="rating-label {{ color }}">● {{ name }}: {{ val }}<span class="dim">
             {%- if max_val == 10.0 %}/10{% else %}%{% endif -%}
-          </span>{% if name == "IMDb" and movie.imdb_votes not in ("", "N/A") %}<span class="dim"> · {{ movie.imdb_votes }} votes</span>{% endif %}</span>
+          </span></span>
           <span class="bar"><span class="bar-fill {{ color }}" style="width:{{ width * 4 }}px"></span></span>
         {% endif %}
       </div>
@@ -42,6 +42,9 @@
       </p>
     {% elif movie.letterboxd_url %}
       <p class="meta"><a href="{{ movie.letterboxd_url }}" target="_blank" rel="noopener">{{ movie.letterboxd_url }}</a></p>
+    {% endif %}
+    {% if movie.imdb_votes not in ("", "N/A") %}
+      <p class="meta dim">IMDb Votes: {{ movie.imdb_votes }}</p>
     {% endif %}
     {% if movie.on_tv %}
       <div class="on-tv">
