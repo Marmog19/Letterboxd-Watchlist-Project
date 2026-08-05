@@ -56,8 +56,14 @@ def display_movies(movies):
             awards = "None"
         lines.append(f"Awards: {awards}")
 
-        if movie.letterboxd_url:
+        if movie.imdb_id:
+            lines.append(f"Letterboxd: [dim]https://letterboxd.com/imdb/{movie.imdb_id}/[/dim]")
+            lines.append(f"IMDb: [dim]https://www.imdb.com/title/{movie.imdb_id}/[/dim]")
+        elif movie.letterboxd_url:
             lines.append(f"Letterboxd: [dim]{movie.letterboxd_url}[/dim]")
+
+        if movie.imdb_votes not in ("", "N/A"):
+            lines.append(f"IMDb Votes: [dim]{movie.imdb_votes}[/dim]")
 
         if movie.on_tv:
             lines.append("📺 On TV today:")

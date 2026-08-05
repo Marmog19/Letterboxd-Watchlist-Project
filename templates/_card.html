@@ -17,7 +17,7 @@
           {% set width = (ratio * 20)|round|int %}
           <span class="rating-label {{ color }}">● {{ name }}: {{ val }}<span class="dim">
             {%- if max_val == 10.0 %}/10{% else %}%{% endif -%}
-          </span></span>
+          </span>{% if name == "IMDb" and movie.imdb_votes not in ("", "N/A") %}<span class="dim"> · {{ movie.imdb_votes }} votes</span>{% endif %}</span>
           <span class="bar"><span class="bar-fill {{ color }}" style="width:{{ width * 4 }}px"></span></span>
         {% endif %}
       </div>
@@ -34,7 +34,13 @@
     <p class="meta">Director: <em>{{ movie.director or "N/A" }}</em></p>
     <p class="meta">Actors: <em>{{ movie.actors|join(", ") if movie.actors else "N/A" }}</em></p>
     <p class="meta">Awards: {{ movie.awards if movie.awards not in ("", "N/A") else "None" }}</p>
-    {% if movie.letterboxd_url %}
+    {% if movie.imdb_id %}
+      <p class="meta links">
+        <a href="https://letterboxd.com/imdb/{{ movie.imdb_id }}/" target="_blank" rel="noopener">Letterboxd</a>
+        <span class="sep">·</span>
+        <a href="https://www.imdb.com/title/{{ movie.imdb_id }}/" target="_blank" rel="noopener">IMDb</a>
+      </p>
+    {% elif movie.letterboxd_url %}
       <p class="meta"><a href="{{ movie.letterboxd_url }}" target="_blank" rel="noopener">{{ movie.letterboxd_url }}</a></p>
     {% endif %}
     {% if movie.on_tv %}

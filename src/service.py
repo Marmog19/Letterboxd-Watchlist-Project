@@ -50,6 +50,8 @@ def _build_movie(row, api_key, tmdb_token, tv_lookup, refresh):
         metacritic_rating=omdb_ratings.get("metacritic", "N/A"),
         on_tv=find_tv_match(english_title, italian_title, tv_lookup),
         poster_url=poster_url,
+        imdb_id=(omdb.get("imdbID", "") if omdb else ""),
+        imdb_votes=(omdb.get("imdbVotes", "N/A") if omdb else "N/A"),
     )
 
 
@@ -58,6 +60,7 @@ def _build_tv_movie(programme_list, api_key, tmdb_token, refresh):
     english_title = italian_title
     omdb = None
     poster_url = ""
+    tmdb_imdb_id = ""
 
     if tmdb_token:
         movie = get_tmdb_movie(italian_title, tmdb_token, refresh=refresh)
@@ -68,6 +71,7 @@ def _build_tv_movie(programme_list, api_key, tmdb_token, refresh):
             if localized:
                 english_title = localized
             poster_url = _poster_url(poster_path)
+            tmdb_imdb_id = imdb_id or ""
             if imdb_id:
                 omdb = get_omdb_by_id(imdb_id, api_key, refresh=refresh)
 
@@ -90,6 +94,8 @@ def _build_tv_movie(programme_list, api_key, tmdb_token, refresh):
         metacritic_rating=omdb_ratings.get("metacritic", "N/A"),
         on_tv=programme_list,
         poster_url=poster_url,
+        imdb_id=(omdb.get("imdbID", "") if omdb else "") or tmdb_imdb_id,
+        imdb_votes=(omdb.get("imdbVotes", "N/A") if omdb else "N/A"),
     )
 
 

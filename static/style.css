@@ -132,6 +132,8 @@ h1 { font-size: 1.5rem; margin: 0 0 1rem; }
 
 .card .meta a { color: var(--accent); }
 
+.card .links .sep { color: var(--dim); margin: 0 0.3rem; }
+
 .on-tv {
   margin: 0.6rem 0;
   padding: 0.5rem 0.6rem;

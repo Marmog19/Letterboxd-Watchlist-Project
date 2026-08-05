@@ -26,6 +26,8 @@ class Movie:
     metacritic_rating: str = "N/A"
     on_tv: list[TVProgramme] = field(default_factory=list)
     poster_url: str = ""
+    imdb_id: str = ""
+    imdb_votes: str = "N/A"
 
 
 def parse_omdb_ratings(data):
