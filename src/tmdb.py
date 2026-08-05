@@ -30,15 +30,17 @@ def get_tmdb_titles(title, year, token, refresh=False):
         best = results[0]
         original = (best.get("original_title") or "").strip()
         localized = (best.get("title") or "").strip()
-        return (original, localized)
+        poster_path = (best.get("poster_path") or "").strip()
+        return (original, localized, poster_path)
     except Exception:
         return None
 
 
 def get_tmdb_movie(title, token, refresh=False, min_score=85):
     """Return the best title-matching TMDB movie as
-    (original, localized, runtime_min, imdb_id) or None. Used to confirm
-    whether an unsure listing is really a film and to resolve IMDb IDs."""
+    (original, localized, runtime_min, imdb_id, poster_path) or None. Used to
+    confirm whether an unsure listing is really a film, resolve IMDb IDs and
+    fetch posters."""
     headers = {"Authorization": f"Bearer {token}", "accept": "application/json"}
     params = {"query": title, "language": "it-IT", "include_adult": "false"}
     try:
@@ -79,6 +81,7 @@ def get_tmdb_movie(title, token, refresh=False, min_score=85):
             (best.get("title") or "").strip(),
             detail.get("runtime") or 0,
             (detail.get("imdb_id") or "").strip() or None,
+            (detail.get("poster_path") or "").strip(),
         )
     except Exception:
         return None

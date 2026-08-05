@@ -25,6 +25,7 @@ class Movie:
     rotten_tomatoes_rating: str = "N/A"
     metacritic_rating: str = "N/A"
     on_tv: list[TVProgramme] = field(default_factory=list)
+    poster_url: str = ""
 
 
 def parse_omdb_ratings(data):

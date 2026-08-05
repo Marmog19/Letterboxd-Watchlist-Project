@@ -9,6 +9,12 @@ from src.tmdb import get_tmdb_movie, get_tmdb_titles
 from src.tv import get_tv_listings
 
 
+def _poster_url(poster_path):
+    if not poster_path:
+        return ""
+    return f"https://image.tmdb.org/t/p/w500{poster_path}"
+
+
 def _build_movie(row, api_key, tmdb_token, tv_lookup, refresh):
     title = row.get("Name", "").strip()
     year = row.get("Year", "").strip()
@@ -21,10 +27,12 @@ def _build_movie(row, api_key, tmdb_token, tv_lookup, refresh):
 
     english_title = omdb.get("Title", title) if omdb else title
     italian_title = ""
+    poster_url = ""
     if tmdb_token:
         titles = get_tmdb_titles(english_title, year, tmdb_token, refresh=refresh)
         if titles:
             italian_title = titles[1] or ""
+            poster_url = _poster_url(titles[2])
 
     return Movie(
         title=english_title,
@@ -41,6 +49,7 @@ def _build_movie(row, api_key, tmdb_token, tv_lookup, refresh):
         rotten_tomatoes_rating=omdb_ratings.get("rt", "N/A"),
         metacritic_rating=omdb_ratings.get("metacritic", "N/A"),
         on_tv=find_tv_match(english_title, italian_title, tv_lookup),
+        poster_url=poster_url,
     )
 
 
@@ -48,15 +57,17 @@ def _build_tv_movie(programme_list, api_key, tmdb_token, refresh):
     italian_title = programme_list[0].title
     english_title = italian_title
     omdb = None
+    poster_url = ""
 
     if tmdb_token:
         movie = get_tmdb_movie(italian_title, tmdb_token, refresh=refresh)
         if movie is None:
             movie = get_tmdb_movie(italian_title, tmdb_token, refresh=refresh, min_score=0)
         if movie:
-            _, localized, _, imdb_id = movie
+            _, localized, _, imdb_id, poster_path = movie
             if localized:
                 english_title = localized
+            poster_url = _poster_url(poster_path)
             if imdb_id:
                 omdb = get_omdb_by_id(imdb_id, api_key, refresh=refresh)
 
@@ -78,6 +89,7 @@ def _build_tv_movie(programme_list, api_key, tmdb_token, refresh):
         rotten_tomatoes_rating=omdb_ratings.get("rt", "N/A"),
         metacritic_rating=omdb_ratings.get("metacritic", "N/A"),
         on_tv=programme_list,
+        poster_url=poster_url,
     )
 
 

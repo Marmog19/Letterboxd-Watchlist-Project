@@ -27,6 +27,9 @@
 
 {% macro movie_card(movie) %}
   <article class="card">
+    {% if movie.poster_url %}
+      <img class="poster" src="{{ movie.poster_url }}" alt="Poster for {{ movie.title }}" loading="lazy">
+    {% endif %}
     <h2>{{ movie.title }}{% if movie.year %} <span class="year">({{ movie.year }})</span>{% endif %}</h2>
     <p class="meta">Director: <em>{{ movie.director or "N/A" }}</em></p>
     <p class="meta">Actors: <em>{{ movie.actors|join(", ") if movie.actors else "N/A" }}</em></p>
