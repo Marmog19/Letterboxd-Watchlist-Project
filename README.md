@@ -20,6 +20,8 @@ python web.py                           # local web app at http://127.0.0.1:5000
 - **TMDB API** — looks up each film's Italian title so Italian-translated listings can be matched; also resolves Italian schedule titles back to English for the TV-only cards (requires `TMDB_READ_TOKEN` in `.env`)
 - **XMLTV feed (epgshare01)** — today's Film programmes on the free-to-air channels listed in `channels.txt`, shown as channel + start–end time for each airing today
 
+Posters and translated titles come from TMDB; the web app attributes TMDB in its footer, as required by their API terms.
+
 ## Fields Displayed
 
 - Title, year, director
